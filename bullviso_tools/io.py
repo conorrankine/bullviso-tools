@@ -56,6 +56,44 @@ def iter_results_dirs(
         if {'.xyz', '.out'} <= suffixes:
             yield Path(d)
 
+def detect_output_type(
+    result_d: Path
+) -> str:
+    """
+    Return the output type matching the files contained in the specified
+    result directory; the output type is the key in `OUTPUT_CONFIGS` whose glob
+    patterns (`xyz_f_glob` and `out_f_glob`) both resolve succesfully.
+
+    Args:
+        result_d (Path): Result directory.
+
+    Returns:
+        str: Output type.
+
+    Raises:
+        ValueError: If the output type cannot be detected;
+        ValueError: If multiple possible output types are detected.
+    """
+
+    matches = []
+    for output_type, output_config in OUTPUT_CONFIGS.items():
+        has_xyz = any(result_d.glob(output_config.xyz_f_glob))
+        has_out = any(result_d.glob(output_config.out_f_glob))
+        if has_xyz and has_out:
+            matches.append(output_type)
+
+    if not matches:
+        raise ValueError(
+            f'couldn\'t detect the output type for {result_d}'
+        )
+    if len(matches) > 1:
+        raise ValueError(
+            f'mutliple possible output types detected for {result_d}: '
+            f'candidates = {{{", ".join(matches)}}}'
+        )
+
+    return matches[0]
+
 # =============================================================================
 #                                     EOF
 # =============================================================================
