@@ -183,6 +183,41 @@ def get_output_file(
     
     return out_files[0]
 
+def get_xyz_file(
+    result_d: Path,
+    output_config: OutputConfig
+) -> Path:
+    """
+    Returns the .xyz file path from the specified result directory that matches
+    the specified output configuration.
+
+    Args:
+        result_d (Path): Result directory.
+        output_config (OutputConfig): Output configuration.
+
+    Returns:
+        Path: Path to the .xyz file in the specified result directory.
+
+    Raises:
+        FileNotFoundError: If an .xyz file cannot be found;
+        ValueError: If multiple possible .xyz files are found.
+    """
+
+    xyz_files = list(result_d.glob(output_config.xyz_f_glob))
+    
+    if not xyz_files:
+        raise FileNotFoundError(
+            f'no output files matching \'{output_config.out_f_glob}\' '
+            f'found in {result_d}'
+        )
+    if len(xyz_files) > 1:
+        raise ValueError(
+            f'multiple output files matching \'{output_config.out_f_glob}\' '
+            f'found in {result_d}: matches = {{{", ".join(xyz_files)}}}'
+        )
+    
+    return xyz_files[0]
+
 # =============================================================================
 #                                     EOF
 # =============================================================================
