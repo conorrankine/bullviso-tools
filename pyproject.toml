@@ -1,0 +1,11 @@
+[project]
+name = "bullviso-tools"
+version = "0.1.0"
+description = """
+A standalone collection of Python utility scripts for setting up and analysing
+computational chemical calculations using the outputs of `bullviso`
+(github.com/conorrankine/bullviso).
+"""
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
