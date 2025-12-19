@@ -127,8 +127,6 @@ def get_scf_energy(
         float: SCF energy (Hartree).
 
     Raises:
-        FileNotFoundError: If an output file cannot be found;
-        ValueError: If multiple possible output files are found;
         ValueError: If the SCF energy cannot be found in the output file.
     """
     
@@ -136,19 +134,7 @@ def get_scf_energy(
         output_config or OUTPUT_CONFIGS[detect_output_type(result_d)]
     )
     
-    out_files = list(result_d.glob(output_config.out_f_glob))
-    if not out_files:
-        raise FileNotFoundError(
-            f'no output files matching \'{output_config.out_f_glob}\' '
-            f'found in {result_d}'
-        )
-    if len(out_files) > 1:
-        raise ValueError(
-            f'multiple output files matching \'{output_config.out_f_glob}\' '
-            f'found in {result_d}: matches = {{{", ".join(out_files)}}}'
-        )
-
-    out_f = out_files[0]
+    out_f = get_output_file(result_d, output_config)
     energy_line_config = output_config.energy_line_config
     with out_f.open('r') as f:
         for line in f:
@@ -161,6 +147,41 @@ def get_scf_energy(
         f'couldn\'t get the SCF energy from {out_f}; no lines containing the '
         f'target string flag \'{energy_line_config.flag}\''
     )
+
+def get_output_file(
+    result_d: Path,
+    output_config: OutputConfig
+) -> Path:
+    """
+    Returns the output file path from the specified result directory that
+    matches the specified output configuration.
+
+    Args:
+        result_d (Path): Result directory.
+        output_config (OutputConfig): Output configuration.
+
+    Returns:
+        Path: Path to the output file in the specified result directory.
+
+    Raises:
+        FileNotFoundError: If an output file cannot be found;
+        ValueError: If multiple possible output files are found.
+    """
+
+    out_files = list(result_d.glob(output_config.out_f_glob))
+    
+    if not out_files:
+        raise FileNotFoundError(
+            f'no output files matching \'{output_config.out_f_glob}\' '
+            f'found in {result_d}'
+        )
+    if len(out_files) > 1:
+        raise ValueError(
+            f'multiple output files matching \'{output_config.out_f_glob}\' '
+            f'found in {result_d}: matches = {{{", ".join(out_files)}}}'
+        )
+    
+    return out_files[0]
 
 # =============================================================================
 #                                     EOF
