@@ -20,15 +20,30 @@ class OutputConfig:
 
     xyz_f_glob: str
     out_f_glob: str
+    energy_line_config: OutputLineConfig
+
+@dataclass(frozen = True)
+class OutputLineConfig:
+
+    flag: str
+    target_index: int
 
 OUTPUT_CONFIGS: dict[str, OutputConfig] = {
     'xtb': OutputConfig(
         xyz_f_glob = 'xtbopt.xyz',
-        out_f_glob = 'xtb.out'
+        out_f_glob = 'xtb.out',
+        energy_line_config = OutputLineConfig(
+            flag = 'TOTAL ENERGY',
+            target_index = 3
+        )
     ),
     'orca': OutputConfig(
         xyz_f_glob = '0*[!j].xyz',
-        out_f_glob = '0*.out'
+        out_f_glob = '0*.out',
+        energy_line_config = OutputLineConfig(
+            flag = 'FINAL SINGLE POINT ENERGY',
+            target_index = 4
+        )
     ),
 }
 
