@@ -137,12 +137,13 @@ def get_scf_energy(
     out_f = get_output_file(result_d, output_config)
     energy_line_config = output_config.energy_line_config
     with out_f.open('r') as f:
-        for line in f:
-            if energy_line_config.flag in line:
-                parts = line.strip().split()
-                if not parts:
-                    continue
-                return float(parts[energy_line_config.target_index])
+        lines = f.readlines()
+    for line in reversed(lines):
+        if energy_line_config.flag in line:
+            parts = line.strip().split()
+            if not parts:
+                continue
+            return float(parts[energy_line_config.target_index])
     raise ValueError(
         f'couldn\'t get the SCF energy from {out_f}; no lines containing the '
         f'target string flag \'{energy_line_config.flag}\''
