@@ -219,6 +219,46 @@ def _get_file_matching_glob(
 
     return matches[0]
 
+def parse_results_dir_name(
+    result_d: Path
+) -> dict[str, str | None]:
+    """
+    Returns the isomer/conformer/pose labels encoded in the name of the
+    specified results directory; expects the result directory name formatted
+    as "<ISOMER>_<CONFORMER>[_<POSE>]".
+
+    Args:
+        result_d (Path): Result directory.
+
+    Returns:
+        dict[str, str | None]: Mapping containing the isomer/conformer/pose
+            labels keyed as 'isomer', 'conformer', and 'pose'.
+
+    Raises:
+        ValueError: If the name of the specified results directory does not
+            contain two or three underscore-separated tokens.
+    """
+    
+    parts = result_d.name.split('_')
+    if len(parts) == 3:
+        isomer, conformer, pose = parts
+    elif len(parts) == 2:
+        isomer, conformer = parts
+        pose = None
+    else:
+        raise ValueError(
+            f'expected the result directory name formatted as '
+            f'"<ISOMER>_<CONFORMER>[_<POSE>]"; got \'{result_d.name}\''
+        )
+
+    labels = {
+        'isomer': isomer,
+        'conformer': conformer,
+        'pose': pose
+    }
+
+    return labels
+
 # =============================================================================
 #                                     EOF
 # =============================================================================
