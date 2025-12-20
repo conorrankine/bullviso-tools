@@ -162,26 +162,9 @@ def get_output_file(
 
     Returns:
         Path: Path to the output file in the specified result directory.
-
-    Raises:
-        FileNotFoundError: If an output file cannot be found;
-        ValueError: If multiple possible output files are found.
     """
 
-    out_files = list(result_d.glob(output_config.out_f_glob))
-    
-    if not out_files:
-        raise FileNotFoundError(
-            f'no output files matching \'{output_config.out_f_glob}\' '
-            f'found in {result_d}'
-        )
-    if len(out_files) > 1:
-        raise ValueError(
-            f'multiple output files matching \'{output_config.out_f_glob}\' '
-            f'found in {result_d}: matches = {{{", ".join(out_files)}}}'
-        )
-    
-    return out_files[0]
+    return _get_file_matching_glob(result_d, output_config.out_f_glob)
 
 def get_xyz_file(
     result_d: Path,
@@ -197,26 +180,43 @@ def get_xyz_file(
 
     Returns:
         Path: Path to the .xyz file in the specified result directory.
-
-    Raises:
-        FileNotFoundError: If an .xyz file cannot be found;
-        ValueError: If multiple possible .xyz files are found.
     """
 
-    xyz_files = list(result_d.glob(output_config.xyz_f_glob))
-    
-    if not xyz_files:
+    return _get_file_matching_glob(result_d, output_config.xyz_f_glob)
+
+def _get_file_matching_glob(
+    result_d: Path,
+    glob_pattern: str
+) -> Path:
+    """
+    Returns the single file matching the supplied glob pattern inside the
+    specified result directory.
+
+    Args:
+        result_d (Path): Result directory.
+        glob_pattern (str): Glob pattern to match the target file.
+
+    Returns:
+        Path: Path to the matched file in the specified result directory.
+
+    Raises:
+        FileNotFoundError: If a matching file cannot be found;
+        ValueError: If multiple possible matching files are found.
+    """
+
+    matches = list(result_d.glob(glob_pattern))
+
+    if not matches:
         raise FileNotFoundError(
-            f'no output files matching \'{output_config.out_f_glob}\' '
-            f'found in {result_d}'
+            f'no files matching \'{glob_pattern}\' found in {result_d}'
         )
-    if len(xyz_files) > 1:
+    if len(matches) > 1:
         raise ValueError(
-            f'multiple output files matching \'{output_config.out_f_glob}\' '
-            f'found in {result_d}: matches = {{{", ".join(xyz_files)}}}'
+            f'multiple files matching \'{glob_pattern}\' found in {result_d}: '
+            f'matches = {{{", ".join(matches)}}}'
         )
-    
-    return xyz_files[0]
+
+    return matches[0]
 
 # =============================================================================
 #                                     EOF
