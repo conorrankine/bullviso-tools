@@ -28,25 +28,6 @@ class OutputLineConfig:
     flag: str
     target_index: int
 
-OUTPUT_CONFIGS: dict[str, OutputConfig] = {
-    'xtb': OutputConfig(
-        xyz_f_glob = 'xtbopt.xyz',
-        out_f_glob = 'xtb.out',
-        energy_line_config = OutputLineConfig(
-            flag = 'TOTAL ENERGY',
-            target_index = 3
-        )
-    ),
-    'orca': OutputConfig(
-        xyz_f_glob = '0*[!j].xyz',
-        out_f_glob = '0*.out',
-        energy_line_config = OutputLineConfig(
-            flag = 'FINAL SINGLE POINT ENERGY',
-            target_index = 4
-        )
-    ),
-}
-
 # =============================================================================
 #                                  FUNCTIONS
 # =============================================================================
@@ -111,7 +92,8 @@ def detect_output_type(
 
 def get_scf_energy(
     result_d: Path,
-    output_config: OutputConfig | None = None
+    output_config: OutputConfig | None = None,
+    units: str = 'au'
 ) -> float:
     """
     Returns the SCF energy in Hartree extracted from the output file contained
@@ -133,6 +115,14 @@ def get_scf_energy(
     output_config = (
         output_config or OUTPUT_CONFIGS[detect_output_type(result_d)]
     )
+
+    try:
+        au_conversion_factor = AU_CONVERSION_FACTORS[units]
+    except KeyError:
+        raise ValueError(
+            f'\'{units}\' is not a supported energy unit; supported energy '
+            f'units are {{{", ".join(AU_CONVERSION_FACTORS.keys())}}}'
+        ) from None
     
     out_f = get_output_file(result_d, output_config)
     energy_line_config = output_config.energy_line_config
@@ -143,7 +133,8 @@ def get_scf_energy(
             parts = line.strip().split()
             if not parts:
                 continue
-            return float(parts[energy_line_config.target_index])
+            energy_au = float(parts[energy_line_config.target_index])
+            return energy_au * au_conversion_factor
     raise ValueError(
         f'couldn\'t get the SCF energy from {out_f}; no lines containing the '
         f'target string flag \'{energy_line_config.flag}\''
@@ -251,6 +242,35 @@ def parse_results_dir_name(
         )
 
     return isomer, conformer, pose
+
+# =============================================================================
+#                                  CONSTANTS
+# =============================================================================
+
+OUTPUT_CONFIGS: dict[str, OutputConfig] = {
+    'xtb': OutputConfig(
+        xyz_f_glob = 'xtbopt.xyz',
+        out_f_glob = 'xtb.out',
+        energy_line_config = OutputLineConfig(
+            flag = 'TOTAL ENERGY',
+            target_index = 3
+        )
+    ),
+    'orca': OutputConfig(
+        xyz_f_glob = '0*[!j].xyz',
+        out_f_glob = '0*.out',
+        energy_line_config = OutputLineConfig(
+            flag = 'FINAL SINGLE POINT ENERGY',
+            target_index = 4
+        )
+    ),
+}
+
+AU_CONVERSION_FACTORS = {
+    'au': 1.000,
+    'kjmol': 2625.500,
+    'kcalmol': 627.510
+}
 
 # =============================================================================
 #                                     EOF
