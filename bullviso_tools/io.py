@@ -221,7 +221,7 @@ def _get_file_matching_glob(
 
 def parse_results_dir_name(
     result_d: Path
-) -> dict[str, str | None]:
+) -> tuple[str, str, str | None]:
     """
     Returns the isomer/conformer/pose labels encoded in the name of the
     specified results directory; expects the result directory name formatted
@@ -231,8 +231,7 @@ def parse_results_dir_name(
         result_d (Path): Result directory.
 
     Returns:
-        dict[str, str | None]: Mapping containing the isomer/conformer/pose
-            labels keyed as 'isomer', 'conformer', and 'pose'.
+        tuple[str, str, str | None]: Tuple of isomer/conformer/pose labels.
 
     Raises:
         ValueError: If the name of the specified results directory does not
@@ -251,13 +250,7 @@ def parse_results_dir_name(
             f'"<ISOMER>_<CONFORMER>[_<POSE>]"; got \'{result_d.name}\''
         )
 
-    labels = {
-        'isomer': isomer,
-        'conformer': conformer,
-        'pose': pose
-    }
-
-    return labels
+    return isomer, conformer, pose
 
 # =============================================================================
 #                                     EOF
