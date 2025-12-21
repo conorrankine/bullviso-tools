@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
+from .constants import AU_CONVERSION_FACTORS
+
 # =============================================================================
 #                                   CLASSES
 # =============================================================================
@@ -244,7 +246,7 @@ def parse_results_dir_name(
     return isomer, conformer, pose
 
 # =============================================================================
-#                                  CONSTANTS
+#                                   CONFIGS
 # =============================================================================
 
 OUTPUT_CONFIGS: dict[str, OutputConfig] = {
@@ -264,12 +266,6 @@ OUTPUT_CONFIGS: dict[str, OutputConfig] = {
             target_index = 4
         )
     ),
-}
-
-AU_CONVERSION_FACTORS = {
-    'au': 1.000,
-    'kjmol': 2625.500,
-    'kcalmol': 627.510
 }
 
 # =============================================================================
