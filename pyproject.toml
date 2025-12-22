@@ -8,4 +8,14 @@ computational chemical calculations using the outputs of `bullviso`
 """
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pandas>=2.3.3",
+    "typer>=0.20.1",
+]
+
+[tool.setuptools.packages.find]
+include = ["bullviso_tools", "scripts"]
+
+[project.scripts]
+energy-summary = "scripts.energy_summary:app"
+aggregate-pop-by-isomer = "scripts.aggregate_pop_by_isomer:app"
