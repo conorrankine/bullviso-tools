@@ -45,7 +45,12 @@ def iter_results_dirs(
 ) -> Iterator[Path]:
     """
     Yields (sub)directories under the specified root directory that contain
-    both .xyz and .out files.
+    both .xyz and .out files, and (optionally) pass a validation check for the
+    i) completion and ii) convergence to a real minimum of the computational
+    chemical calculation inside.
+
+    If any (sub)directory containing both .xyz and .out files also contains a
+    '.ignore' flag file, it is skipped.
 
     Args:
         root_d (Path): Root directory.
@@ -63,14 +68,17 @@ def iter_results_dirs(
         suffixes = {Path(f).suffix for f in files}
         if {'.xyz', '.out'} <= suffixes:
             results_d = Path(d)
-            if validate:
-                try:
-                    if validate_results_dir(results_d):
-                        yield results_d
-                except ValueError as e:
-                    print(f'skipping {results_d}: {e}')
+            if not (results_d / '.ignore').exists():
+                if validate:
+                    try:
+                        if validate_results_dir(results_d):
+                            yield results_d
+                    except ValueError as e:
+                        print(f'skipping {results_d}: {e}')
+                else:
+                    yield results_d
             else:
-                yield results_d
+                print(f'skipping {results_d}: flagged to ignore')
 
 def detect_output_type(
     result_d: Path
