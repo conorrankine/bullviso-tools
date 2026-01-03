@@ -25,6 +25,8 @@ class OutputConfig:
 
     xyz_f_glob: str
     out_f_glob: str
+    out_completion_flag: str
+    out_imaginary_frequency_flag: str
     energy_line_config: OutputLineConfig
 
 @dataclass(frozen = True)
@@ -94,6 +96,49 @@ def detect_output_type(
         )
 
     return matches[0]
+
+def validate_results_dir(
+    result_d: Path,
+    output_config: OutputConfig | None = None
+) -> bool:
+    """
+    Validates that the specified result directory contains a completed
+    computational chemical calculation that has converged to a real minimum,
+    i.e., that has no imaginary (negative-valued) frequencies.
+
+    Args:
+        result_d (Path): Result directory.
+        output_config (OutputConfig, optional): Output configuration to guide
+            parsing of the output file; if None, an output configuration is
+            inferred from the files in the specified result directory.
+
+    Returns:
+        bool: True if validation checks pass.
+
+    Raises:
+        ValueError: If the output file is incomplete, i.e., if the expected
+            'normal termination' message is not printed to the output file;
+        ValueError: If the output file contains imaginary (negative-valued)
+            frequencies, i.e., if the 'imaginary frequency' warning message is
+            printed to the output file.
+    """
+
+    output_config = (
+        output_config or OUTPUT_CONFIGS[detect_output_type(result_d)]
+    )
+
+    out_f = get_output_file(result_d, output_config)
+    with out_f.open('r') as f:
+        f_contents = f.read()
+    if f_contents.rfind(output_config.out_completion_flag) == -1:
+        raise ValueError(
+            f'incomplete output detected'
+        )
+    if f_contents.rfind(output_config.out_imaginary_frequency_flag) != -1:
+        raise ValueError(
+            f'imaginary frequency detected'
+        )
+    return True
 
 def get_scf_energy(
     result_d: Path,
@@ -293,6 +338,8 @@ OUTPUT_CONFIGS: dict[str, OutputConfig] = {
     'xtb': OutputConfig(
         xyz_f_glob = 'xtbopt.xyz',
         out_f_glob = 'xtb.out',
+        out_completion_flag = 'finished run',
+        out_imaginary_frequency_flag = 'significant imaginary frequency',
         energy_line_config = OutputLineConfig(
             flag = 'TOTAL ENERGY',
             target_index = 3
@@ -301,6 +348,8 @@ OUTPUT_CONFIGS: dict[str, OutputConfig] = {
     'orca': OutputConfig(
         xyz_f_glob = '0*[!j].xyz',
         out_f_glob = '0*.out',
+        out_completion_flag = 'ORCA TERMINATED NORMALLY',
+        out_imaginary_frequency_flag = 'IMAGINARY MODE',
         energy_line_config = OutputLineConfig(
             flag = 'FINAL SINGLE POINT ENERGY',
             target_index = 4
