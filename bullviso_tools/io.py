@@ -57,7 +57,12 @@ def iter_results_dirs(
     for d, _, files in os.walk(root_d):
         suffixes = {Path(f).suffix for f in files}
         if {'.xyz', '.out'} <= suffixes:
-            yield Path(d)
+            results_d = Path(d)
+            try:
+                if validate_results_dir(results_d):
+                    yield results_d
+            except ValueError as e:
+                print(f'skipping {results_d}: {e}')
 
 def detect_output_type(
     result_d: Path
