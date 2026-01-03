@@ -40,7 +40,8 @@ class OutputLineConfig:
 # =============================================================================
 
 def iter_results_dirs(
-    root_d: Path
+    root_d: Path,
+    validate: bool = True
 ) -> Iterator[Path]:
     """
     Yields (sub)directories under the specified root directory that contain
@@ -48,6 +49,10 @@ def iter_results_dirs(
 
     Args:
         root_d (Path): Root directory.
+        validate (bool, optional): If True, yield only those (sub)directories
+            with computational chemical calculations that pass a validation
+            check for i) completeness and ii) convegergence to a real minimum;
+            if False, yield all (sub)directories.
 
     Yields:
         Path: Paths to (sub)directories under the specified root directory that
@@ -58,11 +63,14 @@ def iter_results_dirs(
         suffixes = {Path(f).suffix for f in files}
         if {'.xyz', '.out'} <= suffixes:
             results_d = Path(d)
-            try:
-                if validate_results_dir(results_d):
-                    yield results_d
-            except ValueError as e:
-                print(f'skipping {results_d}: {e}')
+            if validate:
+                try:
+                    if validate_results_dir(results_d):
+                        yield results_d
+                except ValueError as e:
+                    print(f'skipping {results_d}: {e}')
+            else:
+                yield results_d
 
 def detect_output_type(
     result_d: Path
