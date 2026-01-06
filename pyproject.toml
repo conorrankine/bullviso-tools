@@ -21,3 +21,4 @@ include = ["bullviso_tools", "scripts"]
 deduplicate = "scripts.deduplicate:app"
 energy-summary = "scripts.energy_summary:app"
 aggregate-pop-by-isomer = "scripts.aggregate_pop_by_isomer:app"
+host-guest-com-analysis = "scripts.host_guest_com_analysis:app"
