@@ -90,12 +90,12 @@ def run(
         dir_okay = True,
         readable = True,
         resolve_path = True,
-        help = 'text here'
+        help = 'root/\'top-level\' directory to process'
     ),
     rms_threshold: float = typer.Option(
         0.1,
         min = 0.0,
-        help = 'text here'
+        help = 'RMS threshold for distance-based clustering/deduplication'
     )
 ):
     

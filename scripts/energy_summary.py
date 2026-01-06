@@ -30,20 +30,20 @@ app = typer.Typer()
 
 def main(
     root_d: Path,
-    units: str = 'kjmol',
     temperature: float = 298.15,
+    output_units: str = 'kjmol',
     output_csv: Path = Path('./energy.csv')
 ):
 
     records = []
     for result_d in iter_results_dirs(root_d):
         isomer, conformer, pose = parse_results_dir_name(result_d)
-        energy = get_scf_energy(result_d, units = units)
+        energy = get_scf_energy(result_d, units = output_units)
         records.append({
             'isomer': isomer,
             'conformer': conformer,
             'pose': pose,
-            f'energy_{units}': energy
+            f'energy_{output_units}': energy
         })
 
     df = pd.DataFrame.from_records(
@@ -52,22 +52,22 @@ def main(
             'isomer',
             'conformer',
             'pose',
-            f'energy_{units}'
+            f'energy_{output_units}'
         ]
     )
 
-    df[f'rel_energy_{units}'] = (
-        df[f'energy_{units}'] - df[f'energy_{units}'].min()
+    df[f'rel_energy_{output_units}'] = (
+        df[f'energy_{output_units}'] - df[f'energy_{output_units}'].min()
     )
 
     df[f'pop({temperature}K)'] = calculate_boltzmann_populations(
-        df[f'rel_energy_{units}'],
-        units = units,
-        temperature = temperature
+        df[f'rel_energy_{output_units}'],
+        temperature = temperature,
+        units = output_units,
     )
 
     df.sort_values(
-        f'rel_energy_{units}',
+        f'rel_energy_{output_units}',
         inplace = True
     )
 
@@ -86,16 +86,16 @@ def run(
         dir_okay = True,
         readable = True,
         resolve_path = True,
-        help = 'text here'
-    ),
-    units: str = typer.Option(
-        'kjmol',
-        help = 'text here'
+        help = 'root/\'top-level\' directory to process'
     ),
     temperature: float = typer.Option(
         298.15,
         min = 0.0,
         help = 'temperature (K) for Boltzmann population analysis'
+    ),
+    output_units: str = typer.Option(
+        'kjmol',
+        help = 'output energy units (e.g., \'kjmol\', \'kcalmol\', etc.)'
     ),
     output_csv: Path = typer.Option(
         './energy.csv',
@@ -103,14 +103,14 @@ def run(
         dir_okay = False,
         writable = True,
         resolve_path = True,
-        help = 'output (.csv) file'
+        help = 'output .csv file to write'
     )
 ):
     
     main(
         root_d = root_d,
-        units = units,
         temperature = temperature,
+        output_units = output_units,
         output_csv = output_csv
     )
 

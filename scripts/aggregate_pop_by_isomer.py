@@ -85,7 +85,7 @@ def run(
         dir_okay = False,
         readable = True,
         resolve_path = True,
-        help = 'text here'
+        help = 'input (energy summary) .csv file to read'
     ),
     output_csv: Path = typer.Option(
         './pop_by_isomer.csv',
@@ -93,7 +93,7 @@ def run(
         dir_okay = False,
         writable = True,
         resolve_path = True,
-        help = 'text here'
+        help = 'output .csv file to write'
     )
 ):
     
