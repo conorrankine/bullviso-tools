@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from rdkit import Chem
 from pathlib import Path
 from typing import Iterator
 
@@ -210,6 +211,41 @@ def get_scf_energy(
         f'couldn\'t get the SCF energy from {out_f}; no lines containing the '
         f'target string flag \'{energy_line_config.flag}\''
     )
+
+def get_mol(
+    result_d: Path,
+    output_config: OutputConfig | None = None
+) -> Chem.Mol:
+    """
+    Returns an RDKit `Chem.Mol` instance loaded from the .xyz file contained
+    in the specified result directory.
+
+    Args:
+        result_d (Path): Result directory.
+        output_config (OutputConfig, optional): Output configuration to guide
+            the location of the .xyz file; if None, an output configuration is
+            inferred from the files in the specified result directory.
+
+    Returns:
+        Chem.Mol: Molecule.
+
+    Raises:
+        ValueError: If a molecule cannot be loaded from the .xyz file, e.g., if
+            the .xyz file is empty or incorrectly formatted.
+    """
+
+    output_config = (
+        output_config or OUTPUT_CONFIGS[detect_output_type(result_d)]
+    )
+
+    xyz_f = get_xyz_file(result_d, output_config)
+    mol = Chem.MolFromXYZFile(str(xyz_f))
+    if mol is None:
+        raise ValueError(
+            f'couldn\'t load a molecule from {xyz_f}; the .xyz file could be '
+            f'empty or incorrectly formatted'
+        )
+    return mol
 
 def get_output_file(
     result_d: Path,
