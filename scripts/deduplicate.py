@@ -28,7 +28,8 @@ app = typer.Typer()
 
 def main(
     root_d: Path,
-    rms_threshold: float = 0.1
+    rms_threshold: float = 0.1,
+    best_rms: bool = False
 ):
     
     isomers = [d.name for d in root_d.iterdir() if d.is_dir()]
@@ -37,7 +38,10 @@ def main(
         if mol is None:
             continue
 
-        rms_matrix = AllChem.GetConformerRMSMatrix(mol)
+        if best_rms:
+            rms_matrix = AllChem.GetAllConformerBestRMS(mol)
+        else:
+            rms_matrix = AllChem.GetConformerRMSMatrix(mol)
         clusters = Butina.ClusterData(
             rms_matrix,
             mol.GetNumConformers(),
@@ -96,12 +100,17 @@ def run(
         0.1,
         min = 0.0,
         help = 'RMS threshold for distance-based clustering/deduplication'
+    ),
+    best_rms: bool = typer.Option(
+        False,
+        help = 'enable symmetry-aware \'best RMS\' structure alignment'
     )
 ):
     
     main(
         root_d = root_d,
-        rms_threshold = rms_threshold
+        rms_threshold = rms_threshold,
+        best_rms = best_rms
     )
 
 # =============================================================================
