@@ -249,7 +249,7 @@ def get_mol(
 
 def get_output_file(
     result_d: Path,
-    output_config: OutputConfig
+    output_config: OutputConfig | None = None
 ) -> Path:
     """
     Returns the output file path from the specified result directory that
@@ -257,17 +257,23 @@ def get_output_file(
 
     Args:
         result_d (Path): Result directory.
-        output_config (OutputConfig): Output configuration.
+        output_config (OutputConfig, optional): Output configuration to guide
+            the location of the output file; if None, an output configuration
+            is inferred from the files in the specified result directory.
 
     Returns:
         Path: Path to the output file in the specified result directory.
     """
 
+    output_config = (
+        output_config or OUTPUT_CONFIGS[detect_output_type(result_d)]
+    )
+
     return _get_file_matching_glob(result_d, output_config.out_f_glob)
 
 def get_xyz_file(
     result_d: Path,
-    output_config: OutputConfig
+    output_config: OutputConfig | None = None
 ) -> Path:
     """
     Returns the .xyz file path from the specified result directory that matches
@@ -275,11 +281,17 @@ def get_xyz_file(
 
     Args:
         result_d (Path): Result directory.
-        output_config (OutputConfig): Output configuration.
+        output_config (OutputConfig, optional): Output configuration to guide
+            the location of the .xyz file; if None, an output configuration is
+            inferred from the files in the specified result directory.
 
     Returns:
         Path: Path to the .xyz file in the specified result directory.
     """
+
+    output_config = (
+        output_config or OUTPUT_CONFIGS[detect_output_type(result_d)]
+    )
 
     return _get_file_matching_glob(result_d, output_config.xyz_f_glob)
 
