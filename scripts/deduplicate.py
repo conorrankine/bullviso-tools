@@ -29,12 +29,16 @@ app = typer.Typer()
 def main(
     root_d: Path,
     rms_threshold: float = 0.1,
+    include_hs: bool = False,
     best_rms: bool = False
 ):
     
     isomers = [d.name for d in root_d.iterdir() if d.is_dir()]
     for isomer in isomers:
-        mol = _load_confs_from_dir(root_d / isomer)
+        mol = _load_confs_from_dir(
+            root_d / isomer,
+            include_hs = include_hs
+        )
         if mol is None:
             continue
 
@@ -68,12 +72,15 @@ def main(
 
 def _load_confs_from_dir(
     root_d: Path,
-    set_properties: bool = True
+    set_properties: bool = True,
+    include_hs: bool = False
 ) -> Chem.Mol | None:
     
     mol: Chem.Mol = None
     for result_d in iter_results_dirs(root_d):
         result_d_mol = get_mol(result_d)
+        if not include_hs:
+            result_d_mol = Chem.RemoveAllHs(result_d_mol)
         result_d_conf = result_d_mol.GetConformer()
         if set_properties:
             energy = get_scf_energy(result_d, units = 'au')
@@ -101,6 +108,10 @@ def run(
         min = 0.0,
         help = 'RMS threshold for distance-based clustering/deduplication'
     ),
+    include_hs: bool = typer.Option(
+        False,
+        help = 'include hydrogen atoms in RMS calculation'
+    ),
     best_rms: bool = typer.Option(
         False,
         help = 'enable symmetry-aware \'best RMS\' structure alignment'
@@ -110,6 +121,7 @@ def run(
     main(
         root_d = root_d,
         rms_threshold = rms_threshold,
+        include_hs = include_hs,
         best_rms = best_rms
     )
 
