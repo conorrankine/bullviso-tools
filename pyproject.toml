@@ -21,3 +21,4 @@ include = ["bullviso_tools", "scripts"]
 deduplicate = "scripts.deduplicate:app"
 energy-summary = "scripts.energy_summary:app"
 aggregate-pop-by-isomer = "scripts.aggregate_pop_by_isomer:app"
+select-by-energy-threshold = "scripts.select_by_energy_threshold:app"
