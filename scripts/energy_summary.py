@@ -14,10 +14,6 @@ from bullviso_tools.io import (
     get_scf_energy
 )
 
-from bullviso_tools.analysis import (
-    calculate_boltzmann_populations
-)
-
 # =============================================================================
 #                                     APP
 # =============================================================================
@@ -30,9 +26,9 @@ app = typer.Typer()
 
 def main(
     root_d: Path,
-    temperature: float = 298.15,
-    output_units: str = 'kjmol',
-    output_csv: Path = Path('./energy.csv')
+    output_csv: Path,
+    output_units: str,
+    output_float_format: str
 ):
 
     records = []
@@ -60,12 +56,6 @@ def main(
         df[f'energy_{output_units}'] - df[f'energy_{output_units}'].min()
     )
 
-    df[f'pop({temperature}K)'] = calculate_boltzmann_populations(
-        df[f'rel_energy_{output_units}'],
-        temperature = temperature,
-        units = output_units,
-    )
-
     df.sort_values(
         f'rel_energy_{output_units}',
         inplace = True
@@ -74,7 +64,7 @@ def main(
     df.to_csv(
         output_csv,
         index = False,
-        float_format = '%.6f'
+        float_format = output_float_format
     )
 
 @app.command()
@@ -88,15 +78,6 @@ def run(
         resolve_path = True,
         help = 'root/\'top-level\' directory to process'
     ),
-    temperature: float = typer.Option(
-        298.15,
-        min = 0.0,
-        help = 'temperature (K) for Boltzmann population analysis'
-    ),
-    output_units: str = typer.Option(
-        'kjmol',
-        help = 'output energy units (e.g., \'kjmol\', \'kcalmol\', etc.)'
-    ),
     output_csv: Path = typer.Option(
         './energy.csv',
         file_okay = True,
@@ -104,14 +85,22 @@ def run(
         writable = True,
         resolve_path = True,
         help = 'output .csv file to write'
+    ),
+    output_units: str = typer.Option(
+        'kjmol',
+        help = 'output energy units'
+    ),
+    output_float_format: str = typer.Option(
+        '%.2f',
+        help = 'output float format'
     )
 ):
     
     main(
         root_d = root_d,
-        temperature = temperature,
+        output_csv = output_csv,
         output_units = output_units,
-        output_csv = output_csv
+        output_float_format = output_float_format
     )
 
 # =============================================================================
