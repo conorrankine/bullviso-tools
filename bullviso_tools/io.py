@@ -75,11 +75,11 @@ def iter_results_dirs(
                         if validate_results_dir(results_d):
                             yield results_d
                     except ValueError as e:
-                        print(f'skipping {results_d}: {e}')
+                        print(f'skipping {results_d.stem}: {e}')
                 else:
                     yield results_d
             else:
-                print(f'skipping {results_d}: flagged to ignore')
+                print(f'skipping {results_d.stem}: flagged to ignore')
 
 def detect_output_type(
     result_d: Path
@@ -109,11 +109,11 @@ def detect_output_type(
 
     if not matches:
         raise ValueError(
-            f'couldn\'t detect the output type for {result_d}'
+            f'couldn\'t detect the output type for {result_d.stem}'
         )
     if len(matches) > 1:
         raise ValueError(
-            f'multiple possible output types detected for {result_d}: '
+            f'multiple possible output types detected for {result_d.stem}: '
             f'candidates = {{{", ".join(matches)}}}'
         )
 
@@ -154,11 +154,11 @@ def validate_results_dir(
         f_contents = f.read()
     if f_contents.rfind(output_config.out_completion_flag) == -1:
         raise ValueError(
-            f'incomplete output detected'
+            f'incomplete output detected in {result_d.stem}'
         )
     if f_contents.rfind(output_config.out_imaginary_frequency_flag) != -1:
         raise ValueError(
-            f'imaginary frequency detected'
+            f'imaginary frequency detected in {result_d.stem}'
         )
     return True
 
@@ -242,8 +242,8 @@ def get_mol(
     mol = Chem.MolFromXYZFile(str(xyz_f))
     if mol is None:
         raise ValueError(
-            f'couldn\'t load a molecule from {xyz_f}; the .xyz file could be '
-            f'empty or incorrectly formatted'
+            f'couldn\'t load a molecule from {result_d.stem}; the .xyz file '
+            f'could be empty or incorrectly formatted'
         )
     return mol
 
@@ -319,12 +319,12 @@ def _get_file_matching_glob(
 
     if not matches:
         raise FileNotFoundError(
-            f'no files matching \'{glob_pattern}\' found in {result_d}'
+            f'no files matching \'{glob_pattern}\' found in {result_d.stem}'
         )
     if len(matches) > 1:
         raise ValueError(
-            f'multiple files matching \'{glob_pattern}\' found in {result_d}: '
-            f'matches = {{{", ".join(matches)}}}'
+            f'multiple files matching \'{glob_pattern}\' found in '
+            f'{result_d.stem}: matches = {{{", ".join(matches)}}}'
         )
 
     return matches[0]
