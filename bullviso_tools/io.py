@@ -415,8 +415,8 @@ OUTPUT_CONFIGS: dict[str, OutputConfig] = {
         )
     ),
     'orca': OutputConfig(
-        xyz_f_glob = '0*[!j].xyz',
-        out_f_glob = '0*.out',
+        xyz_f_glob = 'orca.xyz',
+        out_f_glob = 'orca.out',
         out_completion_flag = 'ORCA TERMINATED NORMALLY',
         out_imaginary_frequency_flag = 'IMAGINARY MODE',
         energy_line_config = OutputLineConfig(
