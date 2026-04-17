@@ -21,71 +21,71 @@ app = typer.Typer()
 # =============================================================================
 
 def main(
-    input_csv: Path = Path('./energy.csv'),
-    output_csv: Path = Path('./pop_by_isomer.csv')
+    input_csv: Path,
+    output_csv: Path,
+    output_float_format: str
 ):
 
     df = pd.read_csv(
         input_csv,
-        dtype = {
-            'isomer': str,
-            'conformer': str,
-            'pose': str
-        }
+        dtype = {'isomer': str, 'conformer': str, 'pose': str}
     )
 
-    population_columns = _population_columns(df)
+    population_column = _population_column(df)
 
-    aggregated_df = (
-        df.groupby('isomer', as_index = False)
-        .agg({column: 'sum' for column in population_columns})
+    grouped_df = (
+        df.groupby('isomer', as_index = False)[population_column].sum()
     )
     
-    aggregated_df['isomer_label'] = (
-        aggregated_df['isomer'].apply(isomer_barcode_to_label)
+    grouped_df['isomer_label'] = (
+        grouped_df['isomer'].apply(isomer_barcode_to_label)
     )
     
-    ordered_columns = ['isomer', 'isomer_label', *population_columns]
-    aggregated_df = aggregated_df[ordered_columns]
+    ordered_columns = ['isomer', 'isomer_label', population_column]
+    grouped_df = grouped_df[ordered_columns]
 
-    aggregated_df.sort_values(
-        population_columns[-1],
+    grouped_df.sort_values(
+        population_column,
         ascending = False,
         inplace = True
     )
 
-    aggregated_df.to_csv(
+    grouped_df.to_csv(
         output_csv,
         index = False,
-        float_format = '%.6f'
+        float_format = output_float_format
     )
 
-def _population_columns(
+def _population_column(
     df: pd.DataFrame
-) -> list[str]:
-    
+) -> str:
+
     population_columns = [
-        column for column in df.columns
-        if column.startswith('pop(') and column.endswith('K)')
+        column for column in df.columns if column.startswith('pop')
     ]
     if not population_columns:
         raise ValueError(
-            f'expected column(s) named like `pop(<TEMP>K)`; found no '
-            f'candidates in {{{", ".join(df.columns)}}}'
+            f'expected exactly one `pop(<TEMPERATURE>K)` column; found no '
+            f'candidate in {{{", ".join(df.columns)}}}'
+        )
+    if len(population_columns) > 1:
+        raise ValueError(
+            f'expected exactly one `pop(<TEMPERATURE>K)` column; found '
+            f'multiple candidates: {", ".join(population_columns)}'
         )
 
-    return population_columns
+    return population_columns[0]
 
 @app.command()
 def run(
     input_csv: Path = typer.Argument(
-        './energy.csv',
+        './pop.csv',
         exists = True,
         file_okay = True,
         dir_okay = False,
         readable = True,
         resolve_path = True,
-        help = 'input (energy summary) .csv file to read'
+        help = 'input (population analysis) .csv file to read'
     ),
     output_csv: Path = typer.Option(
         './pop_by_isomer.csv',
@@ -94,12 +94,17 @@ def run(
         writable = True,
         resolve_path = True,
         help = 'output .csv file to write'
+    ),
+    output_float_format: str = typer.Option(
+        '%.2f',
+        help = 'output float format'
     )
 ):
     
     main(
-        input_csv,
-        output_csv = output_csv
+        input_csv = input_csv,
+        output_csv = output_csv,
+        output_float_format = output_float_format
     )
 
 # =============================================================================
