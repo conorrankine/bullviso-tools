@@ -20,5 +20,6 @@ include = ["bullviso_tools", "scripts"]
 [project.scripts]
 deduplicate = "scripts.deduplicate:app"
 energy-summary = "scripts.energy_summary:app"
+pop-analysis = "scripts.pop_analysis:app"
 aggregate-pop-by-isomer = "scripts.aggregate_pop_by_isomer:app"
 select-by-energy-threshold = "scripts.select_by_energy_threshold:app"
