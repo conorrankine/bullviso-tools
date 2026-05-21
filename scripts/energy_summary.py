@@ -36,6 +36,7 @@ def main(
         isomer, conformer, pose = parse_results_dir_name(result_d)
         energy = get_scf_energy(result_d, units = output_units)
         records.append({
+            'result_d': result_d,
             'isomer': isomer,
             'conformer': conformer,
             'pose': pose,
@@ -45,6 +46,7 @@ def main(
     df = pd.DataFrame.from_records(
         records,
         columns = [
+            'result_d',
             'isomer',
             'conformer',
             'pose',
