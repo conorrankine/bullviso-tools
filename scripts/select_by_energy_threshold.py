@@ -6,6 +6,7 @@
 
 import typer
 import shutil
+import pandas as pd
 from pathlib import Path
 
 from bullviso_tools.io import (
@@ -30,34 +31,31 @@ def main(
     output_d: Path,
     energy_threshold: float,
     units: str = 'kjmol',
-    min_per_isomer: int = 0
+    min_per_isomer: int = 0,
+    energy_csv: Path | None = None
 ):
 
-    records = []
-    for result_d in iter_results_dirs(root_d):
-        isomer, _, _ = parse_results_dir_name(result_d)
-        energy = get_scf_energy(result_d, units = units)
-        records.append({
-            'result_d': result_d,
-            'isomer': isomer,
-            'energy': energy
-        })
+    if energy_csv is None:
+        df = _load_energy_df_from_results(root_d, units)
+    else:
+        df = _load_energy_df_from_csv(energy_csv, units)
 
-    min_energy = min(record['energy'] for record in records)
-
-    selected_result_dirs = set()
+    selected_df = df[df[f'rel_energy_{units}'] < energy_threshold]
     
-    for record in records:
-        if (record['energy'] - min_energy) < energy_threshold:
-            selected_result_dirs.add(record['result_d'])
+    if min_per_isomer > 0:
+        min_per_isomer_df = (
+            df.sort_values(f'rel_energy_{units}')
+            .groupby('isomer', as_index = False)
+            .head(min_per_isomer)
+        )
+        selected_df = pd.concat(
+            [selected_df, min_per_isomer_df],
+            ignore_index = True
+        )
 
-    records_by_isomer = {}
-    for record in records:
-        records_by_isomer.setdefault(record['isomer'], []).append(record)
-    for isomer_records in records_by_isomer.values():
-        isomer_records.sort(key = lambda record: record['energy'])
-        for record in isomer_records[:min_per_isomer]:
-            selected_result_dirs.add(record['result_d'])
+    selected_result_dirs = {
+        Path(result_d) for result_d in selected_df['result_d']
+    }
 
     for src_d in sorted(selected_result_dirs):
         dst_d = output_d / src_d.relative_to(root_d)
@@ -65,6 +63,51 @@ def main(
         src_f = get_xyz_file(src_d)
         dst_f = dst_d / f'{dst_d.name}.xyz'
         shutil.copy(src_f, dst_f)
+
+def _load_energy_df_from_results(
+    root_d: Path,
+    units: str
+) -> pd.DataFrame:
+
+    records = []
+    for result_d in iter_results_dirs(root_d):
+        isomer, conformer, pose = parse_results_dir_name(result_d)
+        energy = get_scf_energy(result_d, units = units)
+        records.append({
+            'result_d': result_d,
+            'isomer': isomer,
+            'conformer': conformer,
+            'pose': pose,
+            f'energy_{units}': energy
+        })
+
+    df = pd.DataFrame.from_records(
+        records,
+        columns = [
+            'result_d',
+            'isomer',
+            'conformer',
+            'pose',
+            f'energy_{units}'
+        ]
+    )
+
+    return df
+
+def _load_energy_df_from_csv(
+    energy_csv: Path,
+    units: str
+) -> pd.DataFrame:
+
+    return pd.read_csv(
+        energy_csv,
+        dtype = {
+            'result_d': str,
+            'isomer': str,
+            'conformer': str,
+            'pose': str
+        }
+    )
 
 @app.command()
 def run(
@@ -98,6 +141,15 @@ def run(
         0,
         min = 0,
         help = 'minimum number of structures to select per isomer'
+    ),
+    energy_csv: Path | None = typer.Option(
+        None,
+        exists = True,
+        file_okay = True,
+        dir_okay = False,
+        readable = True,
+        resolve_path = True,
+        help = 'energy summary .csv to read as a source of energy data'
     )
 ):
     
@@ -106,7 +158,8 @@ def run(
         output_d = output_d,
         energy_threshold = energy_threshold,
         units = units,
-        min_per_isomer = min_per_isomer
+        min_per_isomer = min_per_isomer,
+        energy_csv = energy_csv
     )
 
 # =============================================================================
