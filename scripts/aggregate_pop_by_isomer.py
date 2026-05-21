@@ -8,8 +8,6 @@ import typer
 import pandas as pd
 from pathlib import Path
 
-from bullviso_tools.io import isomer_barcode_to_label
-
 # =============================================================================
 #                                     APP
 # =============================================================================
@@ -36,13 +34,6 @@ def main(
     grouped_df = (
         df.groupby('isomer', as_index = False)[population_column].sum()
     )
-    
-    grouped_df['isomer_label'] = (
-        grouped_df['isomer'].apply(isomer_barcode_to_label)
-    )
-    
-    ordered_columns = ['isomer', 'isomer_label', population_column]
-    grouped_df = grouped_df[ordered_columns]
 
     grouped_df.sort_values(
         population_column,
