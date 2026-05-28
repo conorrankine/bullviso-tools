@@ -68,6 +68,8 @@ def plot_pop_by_isomer(
             raise ValueError(f'top_n must be greater than 0; got {top_n}')
         df = df.head(top_n)
 
+    df = df.sort_values('isomer')
+
     x_column = 'isomer'
     if label_isomers:
         x_column = '_isomer_label'
