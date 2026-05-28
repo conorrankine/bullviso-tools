@@ -74,11 +74,9 @@ def plot_pop_by_isomer(
         df[x_column] = df['isomer'].map(isomer_barcode_to_label)
 
     kwargs.setdefault('xlabel', 'Isomer')
-    kwargs.setdefault('ylabel', 'Population (%)')
+    kwargs.setdefault('ylabel', 'Pop. (%)')
     kwargs.setdefault('rot', 90)
     kwargs.setdefault('legend', False)
-    kwargs.setdefault('figsize', (8.0, 4.8))
-    kwargs.setdefault('color', '#4C78A8')
 
     ax = df.plot.bar(
         x = x_column,
@@ -165,10 +163,9 @@ def plot_rel_energy_by_isomer(
     units = rel_energy_column.removeprefix('rel_energy_')
 
     kwargs.setdefault('xlabel', 'Isomer')
-    kwargs.setdefault('ylabel', f'Relative Energy / {units}')
+    kwargs.setdefault('ylabel', f'Rel. E / {units}')
     kwargs.setdefault('rot', 90)
-    kwargs.setdefault('grid', False)
-    kwargs.setdefault('figsize', (8.0, 4.8))
+    title = kwargs.pop('title', '')
 
     ax = df.boxplot(
         column = rel_energy_column,
@@ -176,6 +173,9 @@ def plot_rel_energy_by_isomer(
         ax = ax,
         **kwargs
     )
+
+    ax.set_title(title)
+    ax.figure.suptitle('')
 
     return ax.figure, ax
 
