@@ -20,9 +20,9 @@ R = 8.314E-3
 # =============================================================================
 
 def calculate_boltzmann_populations(
-    rel_energy: pd.Series,
+    rel_energy: pd.Series[float],
     temperature: float = 298.15
-) -> pd.Series:
+) -> pd.Series[float]:
     """
     Returns Boltzmann populations (%) for conformers with the supplied relative
     energies (kJ mol^{-1}) at the specified temperature.
@@ -36,12 +36,30 @@ def calculate_boltzmann_populations(
         pd.Series: Boltzmann populations (%).
 
     Raises:
-        ValueError: If the specified temperature is <= 0 K.
+        ValueError: If the specified temperature is not finite or is <= 0 K.
+        ValueError: If no relative energies are supplied.
+        ValueError: If the supplied relative energies contain NaN values.
+        ValueError: If the supplied relative energies contain infinite values.
     """
     
-    if temperature <= 0:
+    if not np.isfinite(temperature) or temperature <= 0:
         raise ValueError(
-            f'temperature cannot be 0 K or below; got {temperature} K'
+            f'`temperature` should be finite and > 0 K; got {temperature} K'
+        )
+
+    if rel_energy.empty:
+        raise ValueError(
+            '`rel_energy` cannot be an empty series'
+        )
+
+    if rel_energy.isna().any():
+        raise ValueError(
+            '`rel_energy` cannot contain NaN values'
+        )
+
+    if not np.isfinite(rel_energy).all():
+        raise ValueError(
+            '`rel_energy` cannot contain infinite values'
         )
 
     boltzmann_terms = np.exp((-1.0 * rel_energy) / (R * temperature))
