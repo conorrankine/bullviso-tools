@@ -26,6 +26,7 @@ def plot_pop_by_isomer(
     ax: Axes | None = None,
     population_column: str | None = None,
     top_n: int | None = None,
+    annotate_bars: bool = True,
     label_isomers: bool = True,
     **kwargs
 ) -> tuple[Figure, Axes]:
@@ -41,6 +42,8 @@ def plot_pop_by_isomer(
             the single column beginning with `pop` is inferred.
         top_n (int, optional): Number of most-populated isomers to plot. If
             None, all isomers are plotted.
+        annotate_bars (bool, optional): If True, bars are annotated with their
+            value.
         label_isomers (bool, optional): If True, convert isomer barcodes to
             alpha/beta/gamma/delta labels for x tick labels.
         **kwargs: Additional keyword arguments passed to `DataFrame.plot.bar`.
@@ -86,6 +89,19 @@ def plot_pop_by_isomer(
         ax = ax,
         **kwargs
     )
+
+    if annotate_bars:
+        y_min, y_max = ax.get_ylim()
+        y_offset = 0.02 * (y_max - y_min)
+        for bar in ax.patches:
+            height = bar.get_height()
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                height + y_offset,
+                f'{height:.1f}',
+                ha = 'center',
+                va = 'bottom'
+            )
 
     return ax.figure, ax
 
