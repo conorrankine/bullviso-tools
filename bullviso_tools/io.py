@@ -12,9 +12,11 @@ from rdkit import Chem
 from pathlib import Path
 from typing import Iterator
 
-from .constants import (
-    AU_CONVERSION_FACTORS
-)
+# =============================================================================
+#                                  CONSTANTS
+# =============================================================================
+
+AU_TO_KJMOL = 2625.5
 
 # =============================================================================
 #                                   CLASSES
@@ -163,12 +165,11 @@ def validate_results_dir(
 
 def get_scf_energy(
     result_d: Path,
-    output_config: OutputConfig | None = None,
-    units: str = 'au'
+    output_config: OutputConfig | None = None
 ) -> float:
     """
-    Returns the SCF energy in Hartree extracted from the output file contained
-    in the specified result directory.
+    Returns the SCF energy (kJ mol^{-1}) extracted from the output file in the
+    specified result directory.
 
     Args:
         result_d (Path): Result directory.
@@ -177,7 +178,7 @@ def get_scf_energy(
             inferred from the files in the specified result directory.
 
     Returns:
-        float: SCF energy (Hartree).
+        float: SCF energy (kJ mol^{-1}).
 
     Raises:
         ValueError: If the SCF energy cannot be found in the output file.
@@ -186,14 +187,6 @@ def get_scf_energy(
     output_config = (
         output_config or OUTPUT_CONFIGS[detect_output_type(result_d)]
     )
-
-    try:
-        au_conversion_factor = AU_CONVERSION_FACTORS[units]
-    except KeyError:
-        raise ValueError(
-            f'\'{units}\' is not a supported energy unit; supported energy '
-            f'units are {{{", ".join(AU_CONVERSION_FACTORS.keys())}}}'
-        ) from None
     
     out_f = get_output_file(result_d, output_config)
     energy_line_config = output_config.energy_line_config
@@ -205,7 +198,8 @@ def get_scf_energy(
             if not parts:
                 continue
             energy_au = float(parts[energy_line_config.target_index])
-            return energy_au * au_conversion_factor
+            energy_kjmol = energy_au * AU_TO_KJMOL
+            return energy_kjmol
     raise ValueError(
         f'couldn\'t get the SCF energy from {out_f}; no lines containing the '
         f'target string flag \'{energy_line_config.flag}\''

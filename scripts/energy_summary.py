@@ -27,20 +27,19 @@ app = typer.Typer()
 def main(
     root_d: Path,
     output_csv: Path,
-    output_units: str,
-    output_float_format: str
+    float_format: str
 ):
 
     records = []
     for result_d in iter_results_dirs(root_d):
         isomer, conformer, pose = parse_results_dir_name(result_d)
-        energy = get_scf_energy(result_d, units = output_units)
+        energy = get_scf_energy(result_d)
         records.append({
             'result_d': result_d,
             'isomer': isomer,
             'conformer': conformer,
             'pose': pose,
-            f'energy_{output_units}': energy
+            'energy_kjmol': energy
         })
 
     df = pd.DataFrame.from_records(
@@ -50,23 +49,18 @@ def main(
             'isomer',
             'conformer',
             'pose',
-            f'energy_{output_units}'
+            'energy_kjmol'
         ]
     )
 
-    df[f'rel_energy_{output_units}'] = (
-        df[f'energy_{output_units}'] - df[f'energy_{output_units}'].min()
-    )
+    df['rel_energy_kjmol'] = df['energy_kjmol'] - df['energy_kjmol'].min()
 
-    df.sort_values(
-        f'rel_energy_{output_units}',
-        inplace = True
-    )
+    df.sort_values('rel_energy_kjmol', inplace = True)
 
     df.to_csv(
         output_csv,
         index = False,
-        float_format = output_float_format
+        float_format = float_format
     )
 
 @app.command()
@@ -88,21 +82,16 @@ def run(
         resolve_path = True,
         help = 'output .csv file to write'
     ),
-    output_units: str = typer.Option(
-        'kjmol',
-        help = 'output energy units'
-    ),
-    output_float_format: str = typer.Option(
+    float_format: str = typer.Option(
         '%.2f',
-        help = 'output float format'
+        help = 'float format specifying the output floating point precision'
     )
 ):
     
     main(
         root_d = root_d,
         output_csv = output_csv,
-        output_units = output_units,
-        output_float_format = output_float_format
+        float_format = float_format
     )
 
 # =============================================================================

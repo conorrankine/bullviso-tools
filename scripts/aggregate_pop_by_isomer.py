@@ -21,7 +21,7 @@ app = typer.Typer()
 def main(
     input_csv: Path,
     output_csv: Path,
-    output_float_format: str
+    float_format: str
 ):
 
     df = pd.read_csv(
@@ -44,7 +44,7 @@ def main(
     grouped_df.to_csv(
         output_csv,
         index = False,
-        float_format = output_float_format
+        float_format = float_format
     )
 
 def _population_column(
@@ -86,16 +86,16 @@ def run(
         resolve_path = True,
         help = 'output .csv file to write'
     ),
-    output_float_format: str = typer.Option(
+    float_format: str = typer.Option(
         '%.2f',
-        help = 'output float format'
+        help = 'float format specifying the output floating point precision'
     )
 ):
     
     main(
         input_csv = input_csv,
         output_csv = output_csv,
-        output_float_format = output_float_format
+        float_format = float_format
     )
 
 # =============================================================================

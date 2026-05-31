@@ -83,7 +83,7 @@ def _load_confs_from_dir(
             result_d_mol = Chem.RemoveAllHs(result_d_mol)
         result_d_conf = result_d_mol.GetConformer()
         if set_properties:
-            energy = get_scf_energy(result_d, units = 'au')
+            energy = get_scf_energy(result_d)
             result_d_conf.SetProp('result_d', str(result_d))
             result_d_conf.SetDoubleProp('energy', energy)
         if mol is None:

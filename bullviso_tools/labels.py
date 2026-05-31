@@ -1,10 +1,21 @@
 #!/usr/bin/env python3
 
 # =============================================================================
-#                               LIBRARY IMPORTS
+#                                  CONSTANTS
 # =============================================================================
 
-from .constants import SUBSTITUENT_SITE_LABELS
+SUBSTITUENT_SITE_LABELS: dict[int, str] = {
+    0: r'$\delta^{\prime\prime}$',
+    1: r'$\gamma^{\prime\prime}$',
+    2: r'$\beta^{\prime\prime}$',
+    3: r'$\delta^{\prime}$',
+    4: r'$\gamma^{\prime}$',
+    5: r'$\beta^{\prime}$',
+    6: r'$\delta$',
+    7: r'$\gamma$',
+    8: r'$\beta$',
+    9: r'$\alpha$'
+}
 
 # =============================================================================
 #                                  FUNCTIONS

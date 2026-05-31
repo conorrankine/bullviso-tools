@@ -30,21 +30,20 @@ def main(
     root_d: Path,
     output_d: Path,
     energy_threshold: float,
-    units: str = 'kjmol',
-    min_per_isomer: int = 0,
-    energy_csv: Path | None = None
+    min_per_isomer: int,
+    energy_csv: Path | None
 ):
 
     if energy_csv is None:
-        df = _load_energy_df_from_results(root_d, units)
+        df = _load_energy_df_from_results(root_d)
     else:
-        df = _load_energy_df_from_csv(energy_csv, units)
+        df = _load_energy_df_from_csv(energy_csv)
 
-    selected_df = df[df[f'rel_energy_{units}'] < energy_threshold]
+    selected_df = df[df['rel_energy_kjmol'] < energy_threshold]
     
     if min_per_isomer > 0:
         min_per_isomer_df = (
-            df.sort_values(f'rel_energy_{units}')
+            df.sort_values('rel_energy_kjmol')
             .groupby('isomer', as_index = False)
             .head(min_per_isomer)
         )
@@ -65,20 +64,19 @@ def main(
         shutil.copy(src_f, dst_f)
 
 def _load_energy_df_from_results(
-    root_d: Path,
-    units: str
+    root_d: Path
 ) -> pd.DataFrame:
 
     records = []
     for result_d in iter_results_dirs(root_d):
         isomer, conformer, pose = parse_results_dir_name(result_d)
-        energy = get_scf_energy(result_d, units = units)
+        energy = get_scf_energy(result_d)
         records.append({
             'result_d': result_d,
             'isomer': isomer,
             'conformer': conformer,
             'pose': pose,
-            f'energy_{units}': energy
+            'energy_kjmol': energy
         })
 
     df = pd.DataFrame.from_records(
@@ -88,25 +86,19 @@ def _load_energy_df_from_results(
             'isomer',
             'conformer',
             'pose',
-            f'energy_{units}'
+            'energy_kjmol'
         ]
     )
 
     return df
 
 def _load_energy_df_from_csv(
-    energy_csv: Path,
-    units: str
+    energy_csv: Path
 ) -> pd.DataFrame:
 
     return pd.read_csv(
         energy_csv,
-        dtype = {
-            'result_d': str,
-            'isomer': str,
-            'conformer': str,
-            'pose': str
-        }
+        dtype = {'isomer': str, 'conformer': str, 'pose': str}
     )
 
 @app.command()
@@ -133,10 +125,6 @@ def run(
         min = 0.0,
         help = 'energy threshold'
     ),
-    units: str = typer.Option(
-        'kjmol',
-        help = 'energy units (e.g., \'kjmol\', \'kcalmol\', etc.)'
-    ),
     min_per_isomer: int = typer.Option(
         0,
         min = 0,
@@ -157,7 +145,6 @@ def run(
         root_d = root_d,
         output_d = output_d,
         energy_threshold = energy_threshold,
-        units = units,
         min_per_isomer = min_per_isomer,
         energy_csv = energy_csv
     )
