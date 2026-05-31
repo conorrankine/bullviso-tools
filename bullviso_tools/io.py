@@ -46,12 +46,12 @@ def iter_results_dirs(
     validate: bool = True
 ) -> Iterator[Path]:
     """
-    Yields (sub)directories under the specified root directory that contain
-    both .xyz and .out files, and (optionally) pass a validation check for the
-    i) completion and ii) convergence to a real minimum of the computational
+    Yields (sub)directories under the specified root directory that match a
+    supported output configuration, and (optionally) pass a validation check for
+    the i) completion and ii) convergence to a real minimum of the computational
     chemical calculation inside.
 
-    If any (sub)directory containing both .xyz and .out files also contains a
+    If any (sub)directory matching a supported output configuration contains a
     '.ignore' flag file, it is skipped.
 
     Args:
@@ -63,24 +63,28 @@ def iter_results_dirs(
 
     Yields:
         Path: Paths to (sub)directories under the specified root directory that
-        contain both .xyz and .out files.
+        match a supported output configuration.
     """
 
-    for d, _, files in os.walk(root_d):
-        suffixes = {Path(f).suffix for f in files}
-        if {'.xyz', '.out'} <= suffixes:
-            results_d = Path(d)
-            if not (results_d / '.ignore').exists():
-                if validate:
-                    try:
-                        if validate_results_dir(results_d):
-                            yield results_d
-                    except ValueError as e:
-                        print(f'skipping {results_d.stem}: {e}')
-                else:
+    for d, _, _ in os.walk(root_d):
+        results_d = Path(d)
+        try:
+            output_config = OUTPUT_CONFIGS[detect_output_type(results_d)]
+        except ValueError:
+            continue
+
+        if (results_d / '.ignore').exists():
+            print(f'skipping {results_d.stem}: flagged to ignore')
+            continue
+
+        if validate:
+            try:
+                if validate_results_dir(results_d, output_config):
                     yield results_d
-            else:
-                print(f'skipping {results_d.stem}: flagged to ignore')
+            except ValueError as e:
+                print(f'skipping {results_d.stem}: {e}')
+        else:
+            yield results_d
 
 def detect_output_type(
     result_d: Path
@@ -115,7 +119,7 @@ def detect_output_type(
     if len(matches) > 1:
         raise ValueError(
             f'multiple possible output types detected for {result_d.stem}: '
-            f'candidates = {{{", ".join(matches)}}}'
+            f'candidates = {{{", ".join(str(match) for match in matches)}}}'
         )
 
     return matches[0]
